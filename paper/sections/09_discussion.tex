@@ -1,0 +1,36 @@
+\section{Limitations and discussion}\label{sec:discussion}
+
+SA-HEACS trades a code-secrecy problem for an operations problem, and several limits remain.
+\begin{itemize}
+  \item \textbf{Black-box extraction.} The architecture cannot stop a patient attacker from
+        cloning a function through its outputs (\cref{sec:security}). Features whose value is
+        easy to learn from input--output pairs gain less from server-side execution than
+        features with large hidden state or data.
+  \item \textbf{Latency floor.} Interactive operations faster than about one network round
+        trip cannot move to the server without prediction. Prefetch helps only when user
+        behaviour is predictable, and the 40\,ms round trip assumed here is optimistic for
+        mobile networks.
+  \item \textbf{Offline use.} Cloud-only features fail without connectivity. The original
+        blueprint's answer, locking or queueing premium features offline, is a product cost
+        that users will notice.
+  \item \textbf{Cost.} Remote execution moves compute from users' devices to the vendor's
+        bill. Batching helps only for features with enough concurrent traffic
+        (\cref{sec:eval}).
+  \item \textbf{Privacy and compliance.} User content now leaves the device. Regulated data,
+        data-residency rules and user trust may forbid this for some customers, and any
+        server-side cache becomes a breach target.
+  \item \textbf{Shared-hardware side channels.} Multi-tenant GPUs and CPUs can leak
+        information across tenants. We scope this out, but a production system needs
+        isolation between batches of different customers where the threat warrants it.
+  \item \textbf{Simulation only.} \Cref{sec:eval} uses assumed costs and synthetic
+        sessions. The numbers illustrate trade-offs, not achievable performance.
+  \item \textbf{Learned control plane.} The router and prefetcher are themselves models that
+        can drift or be gamed, for example by a user who crafts sequences to trigger costly
+        speculation. The tier constraint is enforced in code, not learned, so a misbehaving
+        model can waste money but cannot leak a cloud-only feature.
+\end{itemize}
+
+The lifecycle pipeline also changes how teams think about protection. Instead of asking
+whether a feature can be protected on the client, they ask how long its secrecy is worth the
+serving cost. That question has a business answer that changes over time, which is what the
+promotion and demotion policy encodes.

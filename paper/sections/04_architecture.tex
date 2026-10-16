@@ -1,0 +1,75 @@
+\section{SA-HEACS architecture}\label{sec:arch}
+
+SA-HEACS has three components joined by one attested request path: the client shell, the
+orchestrator and the secure clusters (\cref{fig:arch}).
+
+\begin{figure}[htbp]
+\centering
+\input{figures/fig_architecture}
+\caption{SA-HEACS architecture: client shell, attested RPC, orchestrator and segmented
+clusters. Everything inside the dashed client boundary is assumed readable by the attacker;
+the blue clusters hold the protected IP and return only outputs.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Client shell (the untrusted boundary)}
+The shell handles input, canvas navigation, local brush strokes, file handling, UI
+rendering and any feature in the \tier{client\_ok} tier. It holds no cloud-only code or
+weights. Its only secrets are a device identity bound to platform attestation and
+short-lived session keys. We assume it will be fully decompiled and cloned; the design goal
+is that a perfect clone gains a UI and commodity features, not the protected capabilities.
+
+\subsection{Secure clusters (the protected core)}
+Cloud-only features run as segmented microservices grouped by hardware need: tensor and GPU
+inference, vector and geometry maths, and rendering or colour-science pipelines. Each
+feature runs under its own service identity with least-privilege access to its weights.
+Clients never receive code, weights or intermediate tensors that would let a substitute be
+rebuilt more cheaply than by black-box queries; responses carry only the final output at the
+resolution the product needs.
+
+\subsection{Orchestrator (the control plane)}
+The orchestrator sits between the edge and the clusters. It enforces each feature's tier,
+routes \tier{hybrid} and \tier{client\_ok} work to the cheaper side, groups compatible
+requests into micro-batches, and prefetches likely next operations. \Cref{sec:orch} details
+it.
+
+\subsection{Request protocol}
+Every remote call carries an attestation-bound signature, a fresh nonce and an encrypted
+body (\cref{alg:rpc}). The client derives a per-request key from an ephemeral X25519
+exchange \cite{bernstein2006curve25519,rfc7748} with the server's static key, expanded with
+HKDF \cite{rfc5869} using the nonce as salt, and encrypts with AES-GCM \cite{nist80038d}.
+The ephemeral public key, nonce and timestamp are signed with an Ed25519 device key
+\cite{bernstein2012ed25519,rfc8032} that, in production, is bound to a platform attestation
+verdict, and the same bytes are passed to AES-GCM as associated data. The server rejects
+stale or replayed requests and unattested devices before any protected code runs. Request
+and response use disjoint 12-byte GCM nonces under the per-request key.
+
+\begin{algorithm}[htbp]
+\caption{Attested invocation of a cloud-only feature}\label{alg:rpc}
+\small
+\begin{algorithmic}[1]
+\Statex \textbf{Client:}
+\State \((e, E) \gets \Kw{X25519.Generate}()\)
+\State \(n \gets \Kw{Random}(16)\); \(t \gets \Kw{Now}()\)
+\State \(\sigma \gets \Kw{Sign}(K_{\text{device}},\, E \parallel n \parallel t)\) \Comment{\(K_{\text{device}}\) bound to platform attestation}
+\State \(k \gets \Kw{HKDF}(\Kw{ECDH}(e, S_{\text{pub}}),\ \text{salt}=n)\)
+\State \(c \gets \Kw{AES-GCM.Enc}(k,\ n[0{:}12],\ \{\text{feature}, \text{args}\},\ \text{aad}=E \parallel n \parallel t)\)
+\State \textbf{send} \((\text{device\_id}, E, n, t, \sigma, c)\)
+\Statex \textbf{Server:}
+\If{\(|\Kw{Now}() - t| > \Delta\) \textbf{or} \(n \in \text{SeenNonces}\)} \textbf{reject} \EndIf
+\If{\textbf{not} \(\Kw{Verify}(\text{AttestedKey}[\text{device\_id}], \sigma)\)} \textbf{reject} \EndIf
+\If{\textbf{not} \(\Kw{RateLimiter.Allow}(\text{account}, \text{feature})\)} \textbf{reject} \Comment{\cref{sec:security}} \EndIf
+\State \(k \gets \Kw{HKDF}(\Kw{ECDH}(S_{\text{priv}}, E),\ \text{salt}=n)\)
+\State \(\text{req} \gets \Kw{AES-GCM.Dec}(k,\ n[0{:}12],\ c,\ \text{aad})\)
+\State \(y \gets \Kw{Orchestrator.Submit}(\text{req.feature}, \text{req.args})\) \Comment{\cref{sec:orch}}
+\State \Return \(\Kw{AES-GCM.Enc}(k,\ n[12{:}16] \parallel 0^{8},\ \Kw{Watermark}(y),\ \text{aad})\)
+\end{algorithmic}
+\end{algorithm}
+
+The runnable version, \code{attested\_rpc.py} (\cref{app:rpc}), implements lines 1--8 and
+10--13, without the rate limiter and watermark, using the Python \code{cryptography} package
+\cite{pyca_cryptography} and FastAPI \cite{fastapi}. Running it shows a valid call returning
+the filtered result and a cloned client with an unattested key rejected with HTTP~401. In
+production, line~8 would consume a Play Integrity or App Attest verdict
+\cite{google_playintegrity,apple_appattest} instead of a locally registered Ed25519 key, and
+the nonce cache would be bounded by the skew window \(\Delta\).

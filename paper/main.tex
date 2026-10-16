@@ -1,0 +1,160 @@
+% SA-HEACS: Server-Assisted Hybrid Execution and AI-Optimized Cloud Shielding.
+% Build:  python build.py           (or: latexmk -lualatex main.tex)
+% Sections in sections/*.tex; TikZ figures in figures/*.tex; bibliography references.bib.
+% Code listings and their outputs are read from code/ and code/outputs/ (run code/run_all.py
+% first), so the paper always shows the shipped code and what it actually printed.
+\documentclass[11pt,a4paper]{article}
+
+% ---- Fonts and language (LuaLaTeX)
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\setmainfont{Libertinus Serif}
+\setsansfont{Libertinus Sans}
+\setmathfont{Libertinus Math}
+\setmonofont[Scale=MatchLowercase,BoldFont=Inconsolatazi4-Bold.otf]{Inconsolatazi4-Regular.otf}
+\usepackage[british]{babel}
+\usepackage{csquotes}
+
+% ---- Page layout
+\usepackage[margin=25mm,headheight=14pt]{geometry}
+\usepackage{setspace}
+\setstretch{1.08}
+\usepackage{microtype}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textsc{sa-heacs}}
+\fancyhead[R]{\small Server-assisted execution against automated reverse engineering}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% ---- Maths, tables, figures, lists
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\usepackage{graphicx}
+\usepackage[font=small,labelfont=bf,margin=0pt]{caption}
+\usepackage{enumitem}
+\setlist{itemsep=2pt,topsep=4pt}
+\usepackage[section]{placeins}
+
+% ---- Colours, diagrams and plots
+\usepackage{xcolor}
+\definecolor{linkblue}{HTML}{1C5CAB}
+\definecolor{accent}{HTML}{2F6FDB}
+\definecolor{accentfill}{HTML}{E6EEFB}
+\definecolor{promote}{HTML}{E59A1A}
+\definecolor{boxgray}{HTML}{9A9890}
+\definecolor{textgray}{HTML}{5F5E5A}
+\definecolor{codebg}{HTML}{F7F6F3}
+\usepackage{tikz}
+\usetikzlibrary{positioning,fit,arrows.meta,calc,backgrounds}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{pgfplotstable}
+\usepgfplotslibrary{units}
+
+% ---- Algorithms
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\algrenewcommand\algorithmicrequire{\textbf{Input:}}
+\algnewcommand{\LineComment}[1]{\Statex \hfill\textcolor{textgray}{\(\triangleright\) #1}}
+\algrenewcommand{\algorithmiccomment}[1]{\hfill\textcolor{textgray}{\(\triangleright\) #1}}
+\newcommand{\Kw}[1]{\textsc{#1}}
+
+% ---- Code listings
+\usepackage{listings}
+\lstdefinestyle{py}{
+  language=Python, basicstyle=\ttfamily\footnotesize, columns=fullflexible,
+  keepspaces=true, backgroundcolor=\color{codebg}, frame=none,
+  xleftmargin=4pt, xrightmargin=4pt, framesep=4pt, aboveskip=6pt, belowskip=6pt,
+  keywordstyle=\color{accent!80!black}\bfseries, commentstyle=\color{textgray}\itshape,
+  stringstyle=\color{promote!70!black}, showstringspaces=false,
+  breaklines=true, breakatwhitespace=true,
+  postbreak=\mbox{\textcolor{textgray}{$\hookrightarrow$}\space},
+  numbers=left, numberstyle=\tiny\color{textgray}, numbersep=6pt}
+\lstdefinestyle{out}{
+  basicstyle=\ttfamily\footnotesize, columns=fullflexible, keepspaces=true,
+  backgroundcolor=\color{codebg}, frame=leftline, rulecolor=\color{accent},
+  xleftmargin=4pt, framesep=6pt, aboveskip=4pt, belowskip=8pt, breaklines=true}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\tier}[1]{\texttt{#1}}
+
+% ---- Bibliography: numeric, IEEE style, Biber
+\usepackage[style=ieee,backend=biber,sorting=none,maxbibnames=8,minbibnames=3,
+            dashed=false,urldate=iso,seconds=true]{biblatex}
+\addbibresource{references.bib}
+
+% ---- Links (last)
+\usepackage[colorlinks=true,linkcolor=linkblue,citecolor=linkblue,urlcolor=linkblue,
+            pdftitle={SA-HEACS: Server-Assisted Hybrid Execution and AI-Optimized Cloud
+            Shielding Against Automated Reverse Engineering},pdfauthor={Kai Yi Ji}]{hyperref}
+\usepackage{xurl}
+\usepackage[capitalise,noabbrev]{cleveref}
+\crefname{algorithm}{Algorithm}{Algorithms}
+\crefname{lstlisting}{Listing}{Listings}
+
+\title{\textbf{SA-HEACS: Server-Assisted Hybrid Execution and\\
+       AI-Optimized Cloud Shielding Against\\ Automated Reverse Engineering}}
+\author{Kai Yi Ji}
+\date{Preprint, 16 October 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{plain}
+
+\begin{abstract}
+\noindent
+SA-HEACS keeps a product's most valuable logic on servers the vendor controls, so that
+client-side reverse engineering recovers an interface rather than the protected algorithm.
+Automated, AI-assisted reverse-engineering pipelines now chain decompilers such as Ghidra,
+dynamic instrumentation such as Frida, and large language models to recover program
+semantics far faster than a human analyst. Classical client-side defences (obfuscation,
+anti-debugging, tamper-proofing) raise the cost of analysis but cannot prevent recovery in
+general, a limit made precise by the impossibility of virtual black-box obfuscation.
+
+We present Server-Assisted Hybrid Execution and AI-Optimized Cloud Shielding
+(SA-HEACS), an architecture with three parts: a thin client shell that holds no
+high-value intellectual property (IP); attested remote procedure calls to segmented server
+clusters that execute that IP; and a learned orchestrator that decides execution locality,
+micro-batches requests, and prefetches likely work to offset the latency and cost of remote
+execution. A Dynamic Feature Promotion/Demotion Pipeline moves each feature between
+cloud-only and client-local execution as its IP value and clone risk change.
+
+We give a threat model, pseudocode and runnable Python for the attested call path, the
+orchestrator and the lifecycle policy, and a discrete-event simulation of cost and latency.
+In that simulation, a 5\,ms batching window cuts accelerator time per request about eightfold
+for 6\,ms of extra 95th-percentile latency, and prefetching the two most likely next
+operations hides the network round trip for 68\% of steps at the price of 132\% extra
+compute. SA-HEACS removes the protected code from the attacker's machine, which defeats
+static decompilation and memory dumping of that code. It does not stop black-box extraction
+of functionality through the API: query-based model extraction, output-based cloning and
+account abuse remain, and we treat them as residual risks with rate-limiting, watermarking
+and anomaly-detection mitigations rather than claiming them solved.
+\end{abstract}
+
+\vspace{2pt}
+\noindent\textbf{Keywords:} software protection; reverse engineering; obfuscation; remote
+attestation; computation offloading; model extraction; ML serving.
+
+\input{sections/01_introduction}
+\input{sections/02_related}
+\input{sections/03_threat}
+\input{sections/04_architecture}
+\input{sections/05_orchestrator}
+\input{sections/06_lifecycle}
+\input{sections/07_security}
+\input{sections/08_evaluation}
+\input{sections/09_discussion}
+\input{sections/10_conclusion}
+
+\printbibliography[heading=bibintoc]
+
+\clearpage
+\appendix
+\input{sections/appendix}
+
+\end{document}

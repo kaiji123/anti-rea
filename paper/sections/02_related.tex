@@ -1,0 +1,71 @@
+\section{Background and related work}\label{sec:related}
+
+Prior work establishes that client-side protection only delays analysis, that server-side
+execution has been used for performance more than for secrecy, and that a remote API leaks
+its function through its outputs. SA-HEACS sits where those three lines meet.
+
+\subsection{Obfuscation and its limits}
+Collberg, Thomborson and Low catalogued obfuscating transformations by potency, resilience
+and cost \cite{collberg1997taxonomy}, and later framed obfuscation, watermarking and
+tamper-proofing as complementary tools \cite{collberg2002watermarking,collberg2009surreptitious}.
+Barak et al.\ proved that virtual black-box obfuscation is impossible for general programs:
+some functions leak properties through any obfuscated form \cite{barak2012impossibility}.
+Indistinguishability obfuscation is constructible in theory \cite{garg2013candidate} but
+remains far too slow for production code. Empirically, Schrittwieser et al.\ found that most
+practical obfuscations fall to modern static and dynamic analysis given enough effort
+\cite{schrittwieser2016obfuscation}, and Banescu et al.\ showed that symbolic execution
+defeats many transformations unless they are designed against it \cite{banescu2016symbolic}.
+Ceccato et al.\ observed professional penetration testers and found that they locate and
+attack the protected asset rather than deobfuscating the whole program
+\cite{ceccato2017hackers}.
+
+\subsection{Automated and learning-based reverse engineering}
+Scriptable platforms turn reverse engineering into a pipeline. Ghidra provides headless
+batch analysis and a scripting API \cite{nsa2019ghidra}; angr packages the offensive
+binary-analysis techniques surveyed by Shoshitaishvili et al.\ \cite{shoshitaishvili2016sok};
+Frida injects instrumentation into live processes on desktop and mobile platforms
+\cite{frida}. Learned models then improve the output: DIRE and DIRTY predict variable names
+and types for decompiled code \cite{lacomis2019dire,chen2022dirty}, and LLM4Decompile reports
+end-to-end decompilation of compiled binaries by fine-tuned language models
+\cite{tan2024llm4decompile}. These tools lower the human effort per target, which weakens
+defences whose value rested on analyst time.
+
+\subsection{Program splitting and computation offloading}
+Zhang and Gupta proposed hiding critical program slices on a trusted server so that the
+client binary is incomplete \cite{zhang2003hiding}; SA-HEACS generalises this from slices
+to whole features with a managed lifecycle. Offloading systems such as MAUI
+\cite{cuervo2010maui}, CloneCloud \cite{chun2011clonecloud} and Neurosurgeon
+\cite{kang2017neurosurgeon} partition work between device and cloud to save energy or
+latency, and cloud gaming systems stream rendered output to thin clients
+\cite{huang2013gaminganywhere}. These systems optimise performance; secrecy of the offloaded
+code is not their goal, so they freely move code to the client when that is faster.
+SA-HEACS reverses the priority: the security tier is a hard constraint and performance is
+optimised inside it.
+
+\subsection{Attestation}
+Remote attestation lets a server judge the state of a client before serving it. RFC~9334
+defines the roles of attester, verifier and relying party \cite{rfc9334}. Mobile platforms
+provide attestation services, Google Play Integrity \cite{google_playintegrity} and Apple
+App Attest \cite{apple_appattest}, and trusted execution environments such as Intel SGX add
+hardware-rooted quotes \cite{costan2016sgx}. Attestation raises the cost of driving the API
+from a modified client, but it does not keep a legitimate client from observing its own
+inputs and outputs.
+
+\subsection{Model extraction through APIs}
+Keeping code on a server does not keep its function secret. Tramèr et al.\ extracted models
+from commercial prediction APIs through queries alone \cite{tramer2016stealing}; Orekondy et
+al.\ trained functionally similar \enquote{knockoff} networks from black-box outputs
+\cite{orekondy2019knockoff}; Jagielski et al.\ studied high-fidelity extraction
+\cite{jagielski2020extraction}. Defences include query-distribution monitoring such as
+PRADA \cite{juuti2019prada} and watermarks embedded in a model's behaviour
+\cite{adi2018watermarking}. These results bound what SA-HEACS can claim (\cref{sec:security}).
+
+\subsection{Serving systems and batching}
+The orchestrator draws on ML serving work. Clipper introduced adaptive batching for
+latency-bounded prediction serving \cite{crankshaw2017clipper}; Orca added iteration-level
+scheduling for transformer inference \cite{yu2022orca}; vLLM's PagedAttention raised batch
+capacity by managing key--value cache memory \cite{kwon2023vllm}. Resource Central predicts
+virtual-machine behaviour to inform allocation \cite{cortez2017resourcecentral}, and
+predictive prefetching has long been used to hide web latency
+\cite{padmanabhan1996prefetching}. Dean and Barroso describe why tail latency, not the mean,
+governs user experience at scale \cite{dean2013tail}.

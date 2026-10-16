@@ -1,0 +1,53 @@
+% Figure 1: SA-HEACS architecture. Everything in the dashed client box is attacker-readable.
+\begin{tikzpicture}[
+    font=\sffamily\footnotesize,
+    box/.style={draw=boxgray, rounded corners=2pt, fill=white, align=left,
+                inner sep=5pt, text width=#1},
+    box/.default=3.9cm,
+    core/.style={box=3.9cm, draw=accent, line width=0.9pt, fill=accentfill, minimum height=11mm},
+    region/.style={rounded corners=4pt, inner sep=7pt},
+    title/.style={font=\sffamily\footnotesize\bfseries, anchor=south west, inner sep=0pt},
+    arr/.style={-{Stealth[length=5pt]}, draw=boxgray, line width=0.6pt},
+    lbl/.style={font=\sffamily\scriptsize, text=textgray, align=left}]
+
+  % cloud side (laid out first; the client row is placed above it)
+  \node[box] (edge) {\textbf{Edge gateway}\\[1pt]
+      \textcolor{textgray}{Verify attestation, nonce}\\\textcolor{textgray}{Rate limits, query monitor}};
+  \node[box, right=5mm of edge] (orch) {\textbf{AI orchestrator}\\[1pt]
+      \textcolor{textgray}{Tier check, locality routing}\\\textcolor{textgray}{Micro-batching, prefetch}};
+  \node[box, right=5mm of orch] (life) {\textbf{Lifecycle pipeline}\\[1pt]
+      \textcolor{textgray}{Scores IP value and cost}\\\textcolor{textgray}{Sets each feature's tier}};
+  \node[core, below=9mm of edge] (gpu) {\textbf{Tensor / GPU nodes}\\[1pt]\textcolor{textgray}{Neural filters, model weights}};
+  \node[core, below=9mm of orch] (vec) {\textbf{Vector math nodes}\\[1pt]\textcolor{textgray}{Geometry, transforms}};
+  \node[core, below=9mm of life] (ren) {\textbf{Rendering nodes}\\[1pt]\textcolor{textgray}{Colour science, renders}};
+  \node[lbl, below=2.5mm of vec, align=center] (seg) {Segmented clusters: \tier{cloud\_only} code and weights never leave this boundary};
+  \node[title] (stitle) at ($(edge.north west)+(0,2.5mm)$) {Vendor cloud (trusted; protected IP lives only here)};
+  \begin{scope}[on background layer]
+    \node[region, draw=boxgray, fit=(edge)(life)(gpu)(ren)(seg)(stitle)] (cloud) {};
+  \end{scope}
+
+  % client side
+  \node[box=6.6cm, above=27mm of edge.north west, anchor=south west] (shell) {\textbf{Client shell}\\[1pt]
+      \textcolor{textgray}{UI, canvas navigation, brush strokes, files}\\
+      \textcolor{textgray}{\tier{client\_ok} features; attested device key}};
+  \node[box=5.2cm, dashed, anchor=north east] (recover) at (life.north east |- shell.north)
+      {\textbf{What an attacker can recover}\\[1pt]
+      \textcolor{textgray}{Shell code, API schema, own inputs and outputs}\\
+      \textcolor{textgray}{Not cloud-only code or weights}};
+  \node[title] (ctitle) at ($(shell.north west)+(0,2.5mm)$) {Client device (untrusted, attacker-controlled)};
+  \begin{scope}[on background layer]
+    \node[region, draw=boxgray, dashed, fit=(shell)(recover)(ctitle)] (client) {};
+  \end{scope}
+
+  % request path: vertical arrows between the shell and the edge gateway
+  \coordinate (dn) at ($(edge.north west)+(2.9,0)$);
+  \coordinate (up) at ($(edge.north west)+(1.0,0)$);
+  \draw[arr] (dn |- shell.south) -- node[lbl, right=3pt, pos=0.42]
+      {Down: attested, encrypted request (\cref{alg:rpc})\\Up: outputs only, watermarked; prefetched results} (dn);
+  \draw[arr] (up) -- (up |- shell.south);
+  \draw[arr] (edge) -- (orch);
+  \draw[arr] (life) -- (orch);
+  \draw[arr] (orch.south) -- ++(0,-4.5mm) -| (gpu.north);
+  \draw[arr] (orch.south) -- (vec.north);
+  \draw[arr] (orch.south) -- ++(0,-4.5mm) -| (ren.north);
+\end{tikzpicture}

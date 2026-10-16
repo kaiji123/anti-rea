@@ -1,0 +1,137 @@
+\section{Evaluation methodology and simulated results}\label{sec:eval}
+
+In a simulation with stated assumptions, micro-batching makes server-side execution about
+eight times cheaper at a cost of a few milliseconds, and Markov prefetch hides most network
+latency but multiplies compute. These numbers come from a model, not a deployment;
+\cref{sec:realeval} lists what a real evaluation must measure.
+
+\subsection{Setup}
+\code{simulate.py} (\cref{app:simulate}) uses SimPy \cite{simpy} for a discrete-event model
+of one protected feature. Requests arrive as a Poisson process at 2,000 per second. A
+batched kernel call on \(b\) items costs \(4.0 + 0.15\,b\) ms, with at most 64 items per
+batch; the batching timer starts when the first request enters an empty queue. The GPU pool
+is sized from the expected batch size so that utilisation stays at or below 70\%. Each
+configuration simulates 20\,s (about 40,000 requests), discarding the first second. For
+the prefetch experiment, sessions of 20 steps are walks on a skewed first-order Markov chain
+over 12 features; a model fitted on the first 1,000 of 3,000 sessions is evaluated on the
+remaining 2,000. A miss costs the network round trip (40\,ms) plus one unbatched kernel call
+(4.15\,ms); a prefetched local hit costs 5\,ms. Speculative runs that are never used count
+as extra compute.
+
+\subsection{Results}
+\pgfplotstableread[col sep=comma]{code/results_batching.csv}\batching
+\pgfplotstableread[col sep=comma]{code/results_prefetch.csv}\prefetch
+
+\paragraph{Batching window.} \Cref{fig:batching} plots GPU time per 1,000 requests against
+server-side 95th-percentile (p95) latency for windows from 0 to 32\,ms, and
+\cref{tab:batching} gives the full results. Without batching, each request pays the full
+fixed cost, so 1,000 requests take 4,150 GPU-ms on a pool of 12 GPUs. A 5\,ms window
+gathers 11 requests per batch on average and cuts this to 513 GPU-ms on 2 GPUs, while
+server p95 rises from 5.0 to 10.9\,ms. Beyond 20\,ms the fixed cost is already spread over
+about 40 requests, so cost falls only from 247 to 215 GPU-ms while p95 rises from 29.8 to
+42.7\,ms; at 32\,ms most batches reach the 64-item cap.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.86\linewidth, height=6.2cm,
+    font=\sffamily\footnotesize,
+    xlabel={Server p95 latency (ms), excluding network round trip},
+    ylabel={GPU-ms per 1,000 requests},
+    xmin=0, xmax=46, ymin=0, ymax=4600,
+    ytick={0,1000,2000,3000,4000},
+    scaled y ticks=false,
+    yticklabel style={/pgf/number format/.cd, 1000 sep={,}},
+    grid=major, grid style={draw=black!8},
+    axis line style={draw=black!40}, tick style={draw=black!40},
+    nodes near coords={\(W{=}\pgfplotspointmeta\)\,ms},
+    nodes near coords style={font=\sffamily\scriptsize, text=textgray, anchor=south west, inner sep=2pt},
+    point meta=explicit symbolic]
+  \addplot[color=boxgray, mark=*, mark size=1.6pt, line width=0.8pt]
+      table[x=p95_ms, y=gpu_ms_per_1k, meta=window_ms] {\batching};
+  \addplot[only marks, mark=*, mark size=3pt, color=accent, nodes near coords={}]
+      table[x=p95_ms, y=gpu_ms_per_1k, meta=window_ms,
+            restrict expr to domain={\thisrow{window_ms}}{5:5}] {\batching};
+\end{axis}
+\end{tikzpicture}
+\caption{A 5\,ms batching window (blue) cuts GPU time per request about eightfold for
+6\,ms more p95 latency; gains flatten past 20\,ms. \code{simulate.py}, SimPy model,
+2,000 req/s, assumed kernel costs (not measured). \(W = 0\) is no batching.}
+\label{fig:batching}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\caption{Batching-window results from \code{simulate.py} (server-side latency only).}
+\label{tab:batching}
+\small
+\pgfplotstabletypeset[
+  columns={window_ms,gpus,mean_batch,gpu_ms_per_1k,utilisation,p50_ms,p95_ms,p99_ms},
+  columns/window_ms/.style={column name={\(W\) (ms)}, column type={r}},
+  columns/gpus/.style={column name={GPUs}, column type={r}},
+  columns/mean_batch/.style={column name={Mean batch}, fixed, fixed zerofill, precision=1, column type={r}},
+  columns/gpu_ms_per_1k/.style={column name={GPU-ms / 1k req}, fixed, fixed zerofill, precision=1,
+                                 1000 sep={{,}}, column type={r}},
+  columns/utilisation/.style={column name={Util.}, fixed, fixed zerofill, precision=2, column type={r}},
+  columns/p50_ms/.style={column name={p50 (ms)}, fixed, fixed zerofill, precision=1, column type={r}},
+  columns/p95_ms/.style={column name={p95 (ms)}, fixed, fixed zerofill, precision=1, column type={r}},
+  columns/p99_ms/.style={column name={p99 (ms)}, fixed, fixed zerofill, precision=1, column type={r}},
+  every head row/.style={before row=\toprule, after row=\midrule},
+  every last row/.style={after row=\bottomrule}]{\batching}
+\end{table}
+
+The knee of this curve depends on traffic: a feature with 20 requests per second will
+rarely fill a batch within 5\,ms, so low-traffic features gain far less. This supports the
+lifecycle policy in \cref{sec:lifecycle}: features that cannot batch well carry higher
+serving pressure \(S\) and become candidates for promotion sooner.
+
+\paragraph{Prefetch depth.} \Cref{fig:prefetch} varies the number of speculated next
+features \(k\). With \(k = 2\), 68\% of next steps are already in the client cache and mean
+perceived latency falls from 44.1 to 17.4\,ms, but speculative work adds 132\% to demand
+compute. The batching savings in \cref{fig:batching} are large enough to pay for
+\(k = 1\) or \(2\); \(k = 4\) adds 309\% for a further 8.7\,ms saving.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.86\linewidth, height=6.2cm,
+    font=\sffamily\footnotesize,
+    xlabel={Extra speculative compute (\% of demand compute)},
+    ylabel={Mean perceived latency (ms)},
+    xmin=-10, xmax=345, ymin=0, ymax=52,
+    xticklabel={\pgfmathprintnumber{\tick}\%},
+    grid=major, grid style={draw=black!8},
+    axis line style={draw=black!40}, tick style={draw=black!40},
+    visualization depends on={100*\thisrow{hit_rate} \as \hits},
+    nodes near coords={\(k{=}\pgfplotspointmeta\), \pgfmathprintnumber[fixed,precision=0]{\hits}\% hits},
+    nodes near coords style={font=\sffamily\scriptsize, text=textgray, anchor=south west, inner sep=3pt},
+    point meta=explicit symbolic]
+  \addplot[color=boxgray, mark=*, mark size=1.6pt, line width=0.8pt]
+      table[x=extra_compute_pct, y=mean_latency_ms, meta=k] {\prefetch};
+  \addplot[only marks, mark=*, mark size=3pt, color=accent, nodes near coords={}]
+      table[x=extra_compute_pct, y=mean_latency_ms, meta=k,
+            restrict expr to domain={\thisrow{k}}{2:2}] {\prefetch};
+  \draw[dashed, draw=textgray] (axis cs:-10,40) -- (axis cs:345,40)
+      node[pos=0.98, above left, font=\sffamily\scriptsize, text=textgray] {Network round trip, 40\,ms};
+\end{axis}
+\end{tikzpicture}
+\caption{Prefetching the two most likely next steps (blue) cuts mean wait from 44.1 to
+17.4\,ms for 132\% extra speculative compute. \code{simulate.py}, 3,000 synthetic sessions
+over 12 features, first third used for training.}
+\label{fig:prefetch}
+\end{figure}
+
+\subsection{What a real evaluation must measure}\label{sec:realeval}
+The simulation fixes kernel costs, traffic and user behaviour by assumption. A deployment
+study should report:
+(1)~per-feature p50, p95 and p99 end-to-end latency across real networks, since tail latency
+dominates experience \cite{dean2013tail};
+(2)~GPU cost per 1,000 invocations with real traffic mixes and multi-tenant batching;
+(3)~prefetch hit rate and wasted compute from real session logs;
+(4)~a red-team exercise in which an AI-assisted reverse-engineering agent targets the client
+shell, reporting what it recovers; and
+(5)~an extraction study measuring how many queries a substitute model needs to reach a given
+fidelity, with and without the controls of \cref{sec:security}
+\cite{tramer2016stealing,juuti2019prada,orekondy2019knockoff}.

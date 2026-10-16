@@ -1,0 +1,2 @@
+server result: [0.18, 0.5, 0.82]
+unattested clone rejected: 401 bad attestation signature

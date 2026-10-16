@@ -1,0 +1,38 @@
+# ---- Python
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+
+# ---- LaTeX build files (paper/main.pdf is kept)
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.log
+*.out
+*.run.xml
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.xdv
+biber.log
+
+# ---- Editors and OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Kept on purpose (the paper build reads them):
+#   paper/code/outputs/*.txt, paper/code/results_*.csv, paper/main.pdf

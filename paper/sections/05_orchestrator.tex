@@ -1,0 +1,80 @@
+\section{The AI orchestrator}\label{sec:orch}
+
+The orchestrator's job is to make remote execution cheap and fast enough that keeping IP
+server-side is commercially viable. It does three things, and the security tier constrains
+all of them: no optimisation may move a \tier{cloud\_only} feature to the client.
+
+\subsection{Locality routing}
+For \tier{hybrid} and \tier{client\_ok} features, a classifier trained on telemetry predicts
+whether remote execution will finish sooner than local execution, from payload size,
+estimated work, measured round-trip time, device capability and battery level. This follows
+the partitioning logic of MAUI and Neurosurgeon \cite{cuervo2010maui,kang2017neurosurgeon},
+with the tier check placed first (\cref{alg:route}).
+
+\begin{algorithm}[htbp]
+\caption{\Kw{Route}\((r)\)}\label{alg:route}
+\small
+\begin{algorithmic}[1]
+\If{\(r.\text{tier} = \tier{cloud\_only}\)} \Return \Kw{Cloud} \Comment{hard security constraint} \EndIf
+\If{\(r.\text{tier} = \tier{client\_ok}\) \textbf{and} \(r.\text{rtt} > \text{RTT}_{\max}\)} \Return \Kw{Local} \EndIf
+\State \(p \gets \Kw{Model}.P(\text{remote faster} \mid \text{payload}, \text{work}, \text{rtt}, \text{device}, \text{battery})\)
+\State \Return \Kw{Cloud} \textbf{if} \(p \ge 0.5\) \textbf{else} \Kw{Local}
+\end{algorithmic}
+\end{algorithm}
+
+\code{orchestrator.py} (\cref{app:orch}) trains a scikit-learn
+\code{GradientBoostingClassifier} \cite{pedregosa2011sklearn} on 3,000 synthetic telemetry
+records and reaches 0.956 accuracy on 1,000 held-out records. The labels come from a simple
+latency model, so this number shows that the pipeline works, not that a real router would be
+this accurate.
+
+\subsection{Micro-batching}
+Accelerators amortise fixed per-call cost (kernel launch, weight reads) across a batch. The
+orchestrator holds requests for the same feature for up to a window of \(W\) milliseconds
+or until \(B\) requests arrive, then runs one batched call (\cref{alg:batch}), as Clipper
+does for model serving \cite{crankshaw2017clipper}. Requests from different tenants share a
+batch, but each row's output is returned only to its sender, and no state persists across
+rows.
+
+\begin{algorithm}[htbp]
+\caption{\Kw{MicroBatcher.Submit}(feature \(f\), input \(x\))}\label{alg:batch}
+\small
+\begin{algorithmic}[1]
+\State \(Q[f].\Kw{Append}((x, \text{future}))\)
+\If{\(|Q[f]| \ge B\)} \Kw{Flush}\((f)\)
+\ElsIf{no timer for \(f\)} start timer\((W, \Kw{Flush}(f))\)
+\EndIf
+\State \Return \textbf{await} future
+\Statex \textbf{procedure} \Kw{Flush}\((f)\)
+\State \(\text{items} \gets Q[f]\); \(Q[f] \gets [\,]\)
+\State \(Y \gets \Kw{Kernel}_f(\Kw{Stack}(x \text{ for } x \in \text{items}))\) \Comment{one accelerator call}
+\For{each \((\text{item}, y)\)} \(\text{item.future.Resolve}(y)\) \EndFor
+\end{algorithmic}
+\end{algorithm}
+
+The \code{asyncio} implementation in \cref{app:orch} serves a burst of 200 requests in 4
+batched calls (wall-clock time depends on the machine). \Cref{sec:eval} measures the cost
+and latency trade-off of \(W\).
+
+\subsection{Predictive prefetch}
+A first-order Markov model over each user's feature sequence predicts the next operation
+(\cref{alg:prefetch}). When the user invokes feature \(a\), the orchestrator speculatively
+computes the top-\(k\) features \(b\) with \(P(b \mid a)\) above a threshold and pushes the
+results to the client cache. A hit replaces a network round trip with a local read; a miss
+wastes compute. With a toy session of ten steps, the model in \cref{app:orch} learns that
+after \code{denoise} the user goes to \code{upscale} or \code{colorize}.
+
+\begin{algorithm}[htbp]
+\caption{\Kw{OnInvoke}(user \(u\), feature \(a\))}\label{alg:prefetch}
+\small
+\begin{algorithmic}[1]
+\State \(M[u.\text{prev}][a] \mathrel{+}= 1\); \(u.\text{prev} \gets a\)
+\For{\(b \in \Kw{TopK}(M[a])\) with \(M[a][b] / \sum M[a] \ge p_{\min}\)}
+  \If{\(\Kw{Budget.Allow}(u, b)\)} schedule speculative \(\Kw{Run}(b, u.\text{state})\) at low priority \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+Prefetched results are outputs, not code, so prefetch does not weaken the zero-footprint
+rule. It does increase the volume of outputs a client receives, which matters for
+extraction risk (\cref{sec:security}).

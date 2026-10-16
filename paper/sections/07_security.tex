@@ -1,0 +1,85 @@
+\section{Security analysis}\label{sec:security}
+
+SA-HEACS removes code recovery (G1) for cloud-only features, because the code is not on the
+device; it reduces but does not remove functional cloning (G2) and free-riding (G3). The
+original blueprint rated every row \enquote{fully mitigated}; \cref{tab:threats} separates
+what the architecture eliminates from what it only makes harder.
+
+\begin{table}[htbp]
+\centering
+\caption{Reverse-engineering threats under client-only protection and under SA-HEACS.}
+\label{tab:threats}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.1cm} Y Y Y@{}}
+\toprule
+Threat & Client-only protection & SA-HEACS, cloud-only features & Why \\
+\midrule
+Static decompilation (Ghidra, IDA)
+  & Delayed by obfuscation \cite{collberg1997taxonomy,schrittwieser2016obfuscation}
+  & Eliminated for the protected code
+  & Code is not in the client package \\
+Memory dumping and hooking (Frida)
+  & Delayed by anti-debug and integrity checks
+  & Eliminated for the protected code; client inputs and outputs remain visible
+  & Computation runs server-side \\
+AI-assisted decompilation and summarisation
+  & Increasingly effective \cite{chen2022dirty,tan2024llm4decompile}
+  & Recovers only the shell and the API schema
+  & Nothing protected to lift \\
+Black-box functional cloning via the API
+  & Possible
+  & Remains possible; slowed by rate limits, monitoring, output shaping
+  & Outputs leak function \cite{tramer2016stealing,jagielski2020extraction,orekondy2019knockoff} \\
+Patched or cloned client driving the API
+  & Possible
+  & Raised cost: attestation, per-account quotas
+  & Attestation can be bypassed on rooted or emulated devices \\
+Shell and UI cloning
+  & Possible & Accepted & Clone has no protected capability \\
+Cost exhaustion (DoS on GPUs)
+  & Not applicable & New risk & Remote compute is costly per request \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{What is eliminated}
+Against G1, the argument is simple and does not depend on obfuscation strength: an analyst
+cannot recover an artefact that never reaches their machine. Barak et al.'s impossibility
+result \cite{barak2012impossibility} limits what any shipped program can hide; SA-HEACS
+avoids that limit by not shipping the program. This holds only if the server's responses do
+not contain the code or weights in another form, so responses must not include debugging
+traces, intermediate tensors or model files.
+
+\subsection{What remains: extraction through the API}
+A server-side function is still an oracle. Tramèr et al.\ \cite{tramer2016stealing} and
+Orekondy et al.\ \cite{orekondy2019knockoff} show that query access alone can produce a
+useful substitute model, and an AI agent can automate the query campaign as easily as it
+automates decompilation. SA-HEACS therefore treats G2 as a residual risk with layered
+controls:
+\begin{itemize}
+  \item \textbf{Per-account and per-device quotas} tied to attested identities, so that
+        query volume costs real accounts and devices.
+  \item \textbf{Query-distribution monitoring} in the style of PRADA \cite{juuti2019prada},
+        flagging accounts whose inputs look synthetic or adversarially spaced.
+  \item \textbf{Output shaping}: return the product-level result (for example an 8-bit
+        image) rather than logits, confidences or high-precision intermediates that speed up
+        extraction \cite{tramer2016stealing}.
+  \item \textbf{Watermarking} of model behaviour or outputs \cite{adi2018watermarking}, so
+        that a stolen substitute can be identified even if it cannot be prevented.
+\end{itemize}
+These controls raise the price of a clone; none makes it impossible. The honest claim is
+that SA-HEACS converts a white-box attack into a black-box one and makes the black-box attack
+measurable and rate-limited.
+
+\subsection{Free-riding and attestation}
+Attestation \cite{rfc9334,google_playintegrity,apple_appattest} lets the server refuse
+requests from modified clients, but attackers can bypass it on compromised devices, and a
+legitimate unmodified client can still be scripted through accessibility or UI automation.
+Attestation is therefore one signal for the rate limiter and anomaly detector, not a gate
+that is assumed unbreakable.
+
+\subsection{New attack surface}
+Moving IP to the server creates risks that client-only software does not have:
+cost-exhaustion attacks against GPU capacity, injection or deserialisation bugs in the RPC
+layer, and cross-tenant leakage if batching or caching mixes state between users.
+Micro-batching must keep per-row isolation, and prefetch caches must be keyed per user.

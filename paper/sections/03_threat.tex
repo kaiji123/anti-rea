@@ -1,0 +1,43 @@
+\section{Threat model}\label{sec:threat}
+
+The attacker fully controls the client device and holds a valid account, but cannot read
+server memory or storage. This is the standard man-at-the-end setting
+\cite{collberg2009surreptitious} with a trusted server added.
+
+\paragraph{Assets.} (A1) Proprietary algorithms and model weights in cloud-only features.
+(A2) Server-side state such as cached intermediate results. (A3) The service's availability
+and cost envelope. (A4) Lower-value code shipped in the client shell, which is explicitly
+not protected beyond standard obfuscation.
+
+\paragraph{Attacker capabilities.} The attacker can decompile and patch the client binary,
+hook any function with dynamic instrumentation, read and modify process memory, intercept
+traffic after TLS termination on their own device, and script all of this with an AI agent
+that plans, runs tools and summarises findings. They can create many accounts, subject to
+the vendor's sign-up controls, and send any sequence of valid queries.
+
+\paragraph{Trust assumptions.} The server fleet, its hypervisor and the build pipeline are
+trusted; insiders and cloud-provider compromise are out of scope. Platform attestation
+services \cite{google_playintegrity,apple_appattest} are assumed sound, though we treat a
+bypassed attestation as a degraded mode rather than a total failure. Side channels on shared
+server hardware are out of scope but discussed in \cref{sec:discussion}.
+
+\paragraph{Attacker goals.} \Cref{tab:goals} lists the goals we consider and whether the
+design addresses them.
+
+\begin{table}[htbp]
+\centering
+\caption{Attacker goals and their status under SA-HEACS.}\label{tab:goals}
+\small
+\begin{tabularx}{\linewidth}{@{}l Y l@{}}
+\toprule
+Goal & Example & In scope \\
+\midrule
+G1 Code recovery      & Recover source or weights of a cloud-only feature & Yes \\
+G2 Functional cloning & Train or build a substitute from input--output pairs & Yes, as residual risk \\
+G3 Free-riding        & Use a cloned or patched client to call the API without paying & Yes \\
+G4 Shell cloning      & Copy the client UI and commodity features & Accepted \\
+G5 Denial of service  & Exhaust GPU capacity with costly requests & Partly \\
+G6 Server compromise  & Exploit the RPC surface to read server memory & Out of scope; standard hardening \\
+\bottomrule
+\end{tabularx}
+\end{table}

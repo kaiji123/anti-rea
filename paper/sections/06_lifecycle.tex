@@ -1,0 +1,78 @@
+\section{Dynamic feature promotion and demotion pipeline}\label{sec:lifecycle}
+
+A feature's tier is a business decision that changes over time: new IP starts cloud-only,
+and it moves toward the client only when its secrecy is worth less than the cost and latency
+of serving it remotely. Moves toward the client are one-way in practice, because shipped
+code must be assumed public, so the pipeline makes demotion (back to the cloud) automatic
+and gates promotion to the client on a human reviewer.
+
+\subsection{Tiers}
+\begin{itemize}
+  \item \textbf{\tier{cloud\_only} (incubation).} Code and weights exist only on servers.
+        New or high-value features start here.
+  \item \textbf{\tier{hybrid}.} The server stays authoritative, but an obfuscated or
+        reduced-quality client fallback is allowed for offline use or poor networks.
+  \item \textbf{\tier{client\_ok} (commoditised).} The feature ships in the client package,
+        protected only by standard obfuscation \cite{collberg1997taxonomy}, and runs locally
+        to save server cost and latency.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\input{figures/fig_lifecycle}
+\caption{Feature tier state machine with the thresholds of \cref{sec:transition}
+(\(V\) = IP value, \(S\) = serving pressure; every promotion first waits out a 30-day dwell
+time). Only the move to \tier{client\_ok} needs a person to approve it, because shipped code
+cannot be recalled; every move back toward the cloud is automatic.}
+\label{fig:lifecycle}
+\end{figure}
+
+\subsection{Scoring}
+The pipeline computes two scores per feature from product and telemetry signals. IP value
+\(V\) combines novelty \(N\), share of premium revenue \(R\), competitor parity \(C\) (how
+closely public competitors match the output) and whether the method is published,
+\(P \in \{0,1\}\):
+\begin{equation}\label{eq:value}
+  V = 0.35\,N + 0.35\,R + 0.20\,(1 - C) + 0.10\,(1 - P).
+\end{equation}
+Serving pressure \(S\) compares cost per 1,000 invocations \(c\) and 95th-percentile
+latency \(\ell\) to budgets \(c_{\max}\) and \(\ell_{\max}\):
+\begin{equation}\label{eq:pressure}
+  S = \min\!\left(1,\ \tfrac{1}{2}\,\frac{c}{c_{\max}} + \tfrac{1}{2}\,\frac{\ell}{\ell_{\max}}\right).
+\end{equation}
+The weights are illustrative; an organisation would set them with its product and legal
+teams. Clone risk enters through \(C\) and \(P\): once competitors reach parity or the
+method is published, secrecy protects little.
+
+\subsection{Transition policy}\label{sec:transition}
+The policy uses a hysteresis band (\(V_{\text{hi}} = 0.65\), \(V_{\text{lo}} = 0.40\)) and
+a minimum dwell time of 30 days so that noisy signals do not make a feature oscillate
+between tiers (\cref{alg:decide}).
+
+\begin{algorithm}[htbp]
+\caption{\Kw{Decide}(feature \(f\), signals \(s\))}\label{alg:decide}
+\small
+\begin{algorithmic}[1]
+\State \(V \gets \Kw{IPValue}(s)\); \(S \gets \Kw{ServingPressure}(s)\) \Comment{\cref{eq:value,eq:pressure}}
+\If{\(V \ge V_{\text{hi}}\) \textbf{and} \(f.\text{tier} \ne \tier{cloud\_only}\)} \Return \tier{cloud\_only} \Comment{demote now; reversible} \EndIf
+\If{\(f.\text{days\_in\_tier} < \text{MIN\_DWELL}\)} \Return \(f.\text{tier}\) \EndIf
+\If{\(f.\text{tier} = \tier{cloud\_only}\) \textbf{and} \(V < V_{\text{hi}}\) \textbf{and} \(S > 0.6\)} \Return \tier{hybrid} \EndIf
+\If{\(f.\text{tier} = \tier{hybrid}\) \textbf{and} \(V < V_{\text{lo}}\) \textbf{and} \(s.\text{on\_device\_feasible}\)}
+  \State \Return \tier{client\_ok} pending \(\Kw{Approve}(f)\) \Comment{irreversible: human gate}
+\EndIf
+\State \Return \(f.\text{tier}\)
+\end{algorithmic}
+\end{algorithm}
+
+\code{lifecycle.py} (\cref{app:lifecycle}) runs one simulated year for a feature whose
+novelty and revenue share decay while competitor parity rises and the method is published on
+day~201. The feature moves from \tier{cloud\_only} to \tier{hybrid} on day~97
+(\(V = 0.648\), \(S = 0.908\)) and to \tier{client\_ok} on day~201 (\(V = 0.36\)), the day
+publication removes its remaining secrecy value.
+
+\subsection{Automated packaging}
+A promotion to \tier{client\_ok} triggers a build step that compiles the feature for client
+targets, applies the shell's standard obfuscation profile, and adds it to the next client
+release behind a feature flag. Promotion should never ship the server's exact weights or code
+if a distilled or reduced version is enough, since the server version may later become
+valuable again or share components with newer cloud-only features.

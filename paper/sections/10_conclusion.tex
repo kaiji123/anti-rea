@@ -1,0 +1,21 @@
+\section{Conclusion}\label{sec:conclusion}
+
+Client-side protection cannot win against an attacker who owns the machine, and AI-assisted
+tooling shortens the time it takes to lose. SA-HEACS accepts this and keeps the code that
+matters off the machine: a zero-IP client shell, attested and encrypted calls to segmented
+server clusters, and an orchestrator that uses locality routing, micro-batching and prefetch
+to keep remote execution affordable. A promotion and demotion pipeline moves each feature to
+the client once its secrecy no longer pays for its serving cost.
+
+The design eliminates static and dynamic recovery of cloud-only code. It does not eliminate
+functional cloning through the API, which becomes the main residual risk and calls for rate
+limiting, query monitoring, output shaping and watermarking. Future work should evaluate the
+design on a real application with production traffic, run an AI-assisted red team against
+the client shell, and measure extraction cost against the deployed controls.
+
+\section*{Code availability}
+\addcontentsline{toc}{section}{Code availability}
+All programs are in \code{paper/code/} and listed in \cref{app:code}. They run with
+Python~3.11 or later after \code{pip install -r requirements.txt}; \code{run\_all.py} runs
+every program, saves its output to \code{code/outputs/}, and regenerates the CSV files
+behind \cref{fig:batching,fig:prefetch}.

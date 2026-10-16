@@ -1,0 +1,4 @@
+router held-out accuracy: 0.956
+cloud_only feature routes to: cloud
+200 requests served in 4 batched calls (40.9 ms)
+after 'denoise', prefetch: ['upscale', 'colorize']

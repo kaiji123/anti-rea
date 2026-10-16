@@ -1,0 +1,48 @@
+\section{Introduction}\label{sec:intro}
+
+Code that runs on hardware the attacker controls can eventually be read, so the strongest
+protection for an algorithm is not to ship it. Software protection has long accepted that
+every client-side defence is a cost multiplier, not a barrier
+\cite{collberg1997taxonomy,collberg2002watermarking,schrittwieser2016obfuscation}. Studies of
+professional attackers show that they defeat layered obfuscation by combining static and
+dynamic analysis and by focusing on the small region that holds the asset
+\cite{ceccato2017hackers}.
+
+Two shifts make that cost multiplier smaller. First, analysis tools are scriptable end to
+end: Ghidra exposes a headless analyser and scripting API \cite{nsa2019ghidra}, frameworks
+such as angr automate symbolic and dynamic analysis \cite{shoshitaishvili2016sok}, and Frida
+injects JavaScript hooks into running processes to trace, patch and dump memory
+\cite{frida}. Second, learned models now lift binaries toward readable source and recover
+names and types: DIRE and DIRTY predict identifier names and types from decompiler output
+\cite{lacomis2019dire,chen2022dirty}, and LLM4Decompile trains language models to decompile
+x86 binaries end to end \cite{tan2024llm4decompile}. An automated reverse-engineering agent
+(the original SA-HEACS blueprint calls such a toolkit an \enquote{REA}) can therefore chain
+dumping, decompilation and semantic recovery with little human effort. The scarce resource
+for the attacker is no longer analyst time; it is access to the code.
+
+SA-HEACS removes that access for the code that matters. It splits an application into a
+thin client shell, which handles input, local rendering and commodity features, and a set
+of server-side services that hold the high-value IP. The idea of hiding a program slice on
+a trusted server is old \cite{zhang2003hiding}, as is offloading work from a constrained
+client \cite{cuervo2010maui,chun2011clonecloud,kang2017neurosurgeon}. What is new here is the
+combination of three things: an explicit IP-centric partitioning rule; a learned
+orchestrator that makes the economics of remote execution workable through locality
+routing, micro-batching and prefetch; and a lifecycle policy that moves features between
+tiers as their value decays.
+
+This paper makes five contributions:
+\begin{enumerate}
+  \item An architecture that separates a zero-IP client shell from attested, segmented
+        server clusters, with a request protocol (\cref{sec:arch}).
+  \item A threat model that states which reverse-engineering attacks the design removes and
+        which it does not (\cref{sec:threat,sec:security}).
+  \item An orchestrator design with pseudocode and runnable Python for locality routing,
+        micro-batching and Markov prefetch (\cref{sec:orch}).
+  \item A Dynamic Feature Promotion/Demotion Pipeline that scores each feature's IP value
+        and clone risk and moves it between cloud-only and client-local execution
+        (\cref{sec:lifecycle}).
+  \item An evaluation methodology and a reproducible simulation of cost and latency
+        trade-offs, with the limits of what simulation can show (\cref{sec:eval}).
+\end{enumerate}
+All code is listed in \cref{app:code} and runs as shipped; every program output quoted in
+the text is read from the output of that code.

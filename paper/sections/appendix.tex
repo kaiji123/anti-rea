@@ -1,0 +1,36 @@
+\section{Example code}\label{app:code}
+
+All four programs run with Python~3.11 or later after
+\code{pip install cryptography fastapi httpx numpy scikit-learn simpy}
+(versions tested: \code{cryptography} 50.0.2, FastAPI 0.143.2, NumPy 2.4.6
+\cite{harris2020numpy}, scikit-learn 1.9.1, SimPy 4.1.2). The listings below are read from
+the files in \code{paper/code/}, and each output block is the saved output of
+\code{run\_all.py}, so the paper always matches the code. They are teaching
+implementations: keys live in memory, telemetry is synthetic, and production concerns such as
+key rotation, persistence and observability are left out.
+
+\subsection{\texorpdfstring{\code{attested\_rpc.py}}{attested\_rpc.py}: attested, encrypted invocation (\texorpdfstring{\cref{alg:rpc}}{Algorithm 1})}\label{app:rpc}
+\lstinputlisting[style=py]{code/attested_rpc.py}
+\noindent Output:
+\lstinputlisting[style=out]{code/outputs/attested_rpc.txt}
+
+\subsection{\texorpdfstring{\code{orchestrator.py}}{orchestrator.py}: routing, micro-batching, prefetch (Algorithms~\ref*{alg:route}--\ref*{alg:prefetch})}\label{app:orch}
+\lstinputlisting[style=py]{code/orchestrator.py}
+\noindent Output (the wall-clock time on the third line varies between machines and runs):
+\lstinputlisting[style=out]{code/outputs/orchestrator.txt}
+
+\subsection{\texorpdfstring{\code{lifecycle.py}}{lifecycle.py}: promotion and demotion (\texorpdfstring{\cref{alg:decide}}{Algorithm 5})}\label{app:lifecycle}
+\lstinputlisting[style=py]{code/lifecycle.py}
+\noindent Output:
+\lstinputlisting[style=out]{code/outputs/lifecycle.txt}
+
+\subsection{\texorpdfstring{\code{simulate.py}}{simulate.py}: \texorpdfstring{\cref{sec:eval}}{Section 8} simulation}\label{app:simulate}
+The batching experiment is a SimPy process model: an arrival process appends to a per-feature
+queue, a window timer or the 64-item cap flushes it, and each batch waits for a GPU from a
+\code{simpy.Resource} pool. The prefetch experiment generates Markov sessions and scores a
+top-\(k\) predictor fitted on the first third. The program writes
+\code{results\_batching.csv} and \code{results\_prefetch.csv}, which \cref{fig:batching},
+\cref{tab:batching} and \cref{fig:prefetch} read directly.
+\lstinputlisting[style=py]{code/simulate.py}
+\noindent Output:
+\lstinputlisting[style=out]{code/outputs/simulate.txt}

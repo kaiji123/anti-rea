@@ -1,0 +1,510 @@
+% Bibliography for SA-HEACS. Checked 2026-10-16:
+%   - every DOI resolved against the Crossref API (title, authors, venue, pages, year);
+%   - USENIX papers (no DOIs) checked against the USENIX proceedings pages; page ranges
+%     are given only where they could be confirmed, otherwise the official URL is given.
+%   - online documentation entries carry an access date (urldate).
+
+% ------------------------------------------------------------ obfuscation and its limits
+@techreport{collberg1997taxonomy,
+  author      = {Collberg, Christian and Thomborson, Clark and Low, Douglas},
+  title       = {A Taxonomy of Obfuscating Transformations},
+  institution = {Department of Computer Science, The University of Auckland},
+  type        = {Technical Report},
+  number      = {148},
+  year        = {1997},
+  month       = jul
+}
+
+@article{collberg2002watermarking,
+  author  = {Collberg, Christian S. and Thomborson, Clark},
+  title   = {Watermarking, Tamper-Proofing, and Obfuscation: Tools for Software Protection},
+  journal = {IEEE Transactions on Software Engineering},
+  volume  = {28},
+  number  = {8},
+  pages   = {735--746},
+  year    = {2002},
+  doi     = {10.1109/TSE.2002.1027797}
+}
+
+@article{barak2012impossibility,
+  author  = {Barak, Boaz and Goldreich, Oded and Impagliazzo, Russell and Rudich, Steven
+             and Sahai, Amit and Vadhan, Salil and Yang, Ke},
+  title   = {On the (Im)possibility of Obfuscating Programs},
+  journal = {Journal of the ACM},
+  volume  = {59},
+  number  = {2},
+  pages   = {6:1--6:48},
+  year    = {2012},
+  doi     = {10.1145/2160158.2160159},
+  note    = {Preliminary version in CRYPTO 2001}
+}
+
+@article{schrittwieser2016obfuscation,
+  author  = {Schrittwieser, Sebastian and Katzenbeisser, Stefan and Kinder, Johannes
+             and Merzdovnik, Georg and Weippl, Edgar},
+  title   = {Protecting Software through Obfuscation: Can It Keep Pace with Progress in
+             Code Analysis?},
+  journal = {ACM Computing Surveys},
+  volume  = {49},
+  number  = {1},
+  pages   = {4:1--4:37},
+  year    = {2016},
+  doi     = {10.1145/2886012}
+}
+
+@inproceedings{garg2013candidate,
+  author    = {Garg, Sanjam and Gentry, Craig and Halevi, Shai and Raykova, Mariana
+               and Sahai, Amit and Waters, Brent},
+  title     = {Candidate Indistinguishability Obfuscation and Functional Encryption for
+               All Circuits},
+  booktitle = {Proceedings of the 54th IEEE Annual Symposium on Foundations of Computer
+               Science (FOCS)},
+  pages     = {40--49},
+  year      = {2013},
+  publisher = {IEEE},
+  doi       = {10.1109/FOCS.2013.13}
+}
+
+@inproceedings{banescu2016symbolic,
+  author    = {Banescu, Sebastian and Collberg, Christian and Ganesh, Vijay
+               and Newsham, Zack and Pretschner, Alexander},
+  title     = {Code Obfuscation against Symbolic Execution Attacks},
+  booktitle = {Proceedings of the 32nd Annual Computer Security Applications Conference
+               (ACSAC)},
+  pages     = {189--200},
+  year      = {2016},
+  publisher = {ACM},
+  doi       = {10.1145/2991079.2991114}
+}
+
+@inproceedings{ceccato2017hackers,
+  author    = {Ceccato, Mariano and Tonella, Paolo and Basile, Cataldo and Coppens, Bart
+               and De Sutter, Bjorn and Falcarin, Paolo and Torchiano, Marco},
+  title     = {How Professional Hackers Understand Protected Code while Performing Attack
+               Tasks},
+  booktitle = {Proceedings of the 25th IEEE/ACM International Conference on Program
+               Comprehension (ICPC)},
+  pages     = {154--164},
+  year      = {2017},
+  publisher = {IEEE},
+  doi       = {10.1109/ICPC.2017.2}
+}
+
+@book{collberg2009surreptitious,
+  author    = {Collberg, Christian and Nagra, Jasvir},
+  title     = {Surreptitious Software: Obfuscation, Watermarking, and Tamperproofing for
+               Software Protection},
+  publisher = {Addison-Wesley},
+  address   = {Upper Saddle River, NJ},
+  year      = {2009},
+  isbn      = {978-0-321-54925-9}
+}
+
+% --------------------------------------------- automated and learning-based reverse engineering
+@inproceedings{shoshitaishvili2016sok,
+  author    = {Shoshitaishvili, Yan and Wang, Ruoyu and Salls, Christopher and Stephens, Nick
+               and Polino, Mario and Dutcher, Andrew and Grosen, John and Feng, Siji
+               and Hauser, Christophe and Kruegel, Christopher and Vigna, Giovanni},
+  title     = {{SoK}: (State of) The Art of War: Offensive Techniques in Binary Analysis},
+  booktitle = {Proceedings of the 2016 IEEE Symposium on Security and Privacy (S\&P)},
+  pages     = {138--157},
+  year      = {2016},
+  publisher = {IEEE},
+  doi       = {10.1109/SP.2016.17}
+}
+
+@inproceedings{lacomis2019dire,
+  author    = {Lacomis, Jeremy and Yin, Pengcheng and Schwartz, Edward J.
+               and Allamanis, Miltiadis and Le Goues, Claire and Neubig, Graham
+               and Vasilescu, Bogdan},
+  title     = {{DIRE}: A Neural Approach to Decompiled Identifier Naming},
+  booktitle = {Proceedings of the 34th IEEE/ACM International Conference on Automated
+               Software Engineering (ASE)},
+  pages     = {628--639},
+  year      = {2019},
+  publisher = {IEEE},
+  doi       = {10.1109/ASE.2019.00064}
+}
+
+@inproceedings{chen2022dirty,
+  author    = {Chen, Qibin and Lacomis, Jeremy and Schwartz, Edward J. and Le Goues, Claire
+               and Neubig, Graham and Vasilescu, Bogdan},
+  title     = {Augmenting Decompiler Output with Learned Variable Names and Types},
+  booktitle = {Proceedings of the 31st USENIX Security Symposium},
+  year      = {2022},
+  publisher = {USENIX Association},
+  url       = {https://www.usenix.org/conference/usenixsecurity22/presentation/chen-qibin},
+  eprint    = {2108.06363},
+  eprinttype = {arXiv}
+}
+
+@inproceedings{tan2024llm4decompile,
+  author    = {Tan, Hanzhuo and Luo, Qi and Li, Jing and Zhang, Yuqun},
+  title     = {{LLM4Decompile}: Decompiling Binary Code with Large Language Models},
+  booktitle = {Proceedings of the 2024 Conference on Empirical Methods in Natural Language
+               Processing (EMNLP)},
+  pages     = {3473--3487},
+  year      = {2024},
+  publisher = {Association for Computational Linguistics},
+  doi       = {10.18653/v1/2024.emnlp-main.203}
+}
+
+@misc{nsa2019ghidra,
+  author       = {{National Security Agency}},
+  title        = {Ghidra: Software Reverse Engineering Framework},
+  year         = {2019},
+  howpublished = {Software},
+  url          = {https://github.com/NationalSecurityAgency/ghidra},
+  urldate      = {2026-10-16}
+}
+
+@misc{frida,
+  author       = {Ravnås, Ole André Vadla},
+  title        = {Frida: Dynamic Instrumentation Toolkit for Developers, Reverse-Engineers,
+                  and Security Researchers},
+  howpublished = {Software and documentation},
+  url          = {https://frida.re/docs/home/},
+  urldate      = {2026-10-16}
+}
+
+% ------------------------------------------------------- program splitting and offloading
+@inproceedings{zhang2003hiding,
+  author    = {Zhang, Xiangyu and Gupta, Rajiv},
+  title     = {Hiding Program Slices for Software Security},
+  booktitle = {Proceedings of the International Symposium on Code Generation and
+               Optimization (CGO)},
+  pages     = {325--336},
+  year      = {2003},
+  publisher = {IEEE},
+  doi       = {10.1109/CGO.2003.1191556}
+}
+
+@inproceedings{cuervo2010maui,
+  author    = {Cuervo, Eduardo and Balasubramanian, Aruna and Cho, Dae-ki and Wolman, Alec
+               and Saroiu, Stefan and Chandra, Ranveer and Bahl, Paramvir},
+  title     = {{MAUI}: Making Smartphones Last Longer with Code Offload},
+  booktitle = {Proceedings of the 8th International Conference on Mobile Systems,
+               Applications, and Services (MobiSys)},
+  pages     = {49--62},
+  year      = {2010},
+  publisher = {ACM},
+  doi       = {10.1145/1814433.1814441}
+}
+
+@inproceedings{chun2011clonecloud,
+  author    = {Chun, Byung-Gon and Ihm, Sunghwan and Maniatis, Petros and Naik, Mayur
+               and Patti, Ashwin},
+  title     = {{CloneCloud}: Elastic Execution between Mobile Device and Cloud},
+  booktitle = {Proceedings of the Sixth European Conference on Computer Systems (EuroSys)},
+  pages     = {301--314},
+  year      = {2011},
+  publisher = {ACM},
+  doi       = {10.1145/1966445.1966473}
+}
+
+@inproceedings{kang2017neurosurgeon,
+  author    = {Kang, Yiping and Hauswald, Johann and Gao, Cao and Rovinski, Austin
+               and Mudge, Trevor and Mars, Jason and Tang, Lingjia},
+  title     = {Neurosurgeon: Collaborative Intelligence Between the Cloud and Mobile Edge},
+  booktitle = {Proceedings of the 22nd International Conference on Architectural Support for
+               Programming Languages and Operating Systems (ASPLOS)},
+  pages     = {615--629},
+  year      = {2017},
+  publisher = {ACM},
+  doi       = {10.1145/3037697.3037698}
+}
+
+@inproceedings{huang2013gaminganywhere,
+  author    = {Huang, Chun-Ying and Hsu, Cheng-Hsin and Chang, Yu-Chun and Chen, Kuan-Ta},
+  title     = {{GamingAnywhere}: An Open Cloud Gaming System},
+  booktitle = {Proceedings of the 4th ACM Multimedia Systems Conference (MMSys)},
+  pages     = {36--47},
+  year      = {2013},
+  publisher = {ACM},
+  doi       = {10.1145/2483977.2483981}
+}
+
+% ------------------------------------------------------------------------- attestation
+@techreport{rfc9334,
+  author      = {Birkholz, Henk and Thaler, Dave and Richardson, Michael and Smith, Ned
+                 and Pan, Wei},
+  title       = {{Remote ATtestation procedureS (RATS) Architecture}},
+  institution = {Internet Engineering Task Force},
+  type        = {RFC},
+  number      = {9334},
+  year        = {2023},
+  month       = jan,
+  doi         = {10.17487/RFC9334}
+}
+
+@misc{costan2016sgx,
+  author       = {Costan, Victor and Devadas, Srinivas},
+  title        = {{Intel SGX} Explained},
+  howpublished = {Cryptology ePrint Archive, Paper 2016/086},
+  year         = {2016},
+  url          = {https://eprint.iacr.org/2016/086}
+}
+
+@misc{google_playintegrity,
+  author       = {{Google}},
+  title        = {{Play Integrity API}},
+  howpublished = {Android Developers documentation},
+  url          = {https://developer.android.com/google/play/integrity},
+  urldate      = {2026-10-16}
+}
+
+@misc{apple_appattest,
+  author       = {{Apple Inc.}},
+  title        = {Establishing Your App's Integrity},
+  howpublished = {Apple Developer documentation, DeviceCheck framework},
+  url          = {https://developer.apple.com/documentation/devicecheck/establishing-your-app-s-integrity},
+  urldate      = {2026-10-16}
+}
+
+% ------------------------------------------------- cryptographic primitives (Algorithm 1)
+@techreport{rfc7748,
+  author      = {Langley, Adam and Hamburg, Mike and Turner, Sean},
+  title       = {Elliptic Curves for Security},
+  institution = {Internet Research Task Force},
+  type        = {RFC},
+  number      = {7748},
+  year        = {2016},
+  month       = jan,
+  doi         = {10.17487/RFC7748}
+}
+
+@techreport{rfc8032,
+  author      = {Josefsson, Simon and Liusvaara, Ilari},
+  title       = {Edwards-Curve Digital Signature Algorithm ({EdDSA})},
+  institution = {Internet Research Task Force},
+  type        = {RFC},
+  number      = {8032},
+  year        = {2017},
+  month       = jan,
+  doi         = {10.17487/RFC8032}
+}
+
+@techreport{rfc5869,
+  author      = {Krawczyk, Hugo and Eronen, Pasi},
+  title       = {{HMAC}-based Extract-and-Expand Key Derivation Function ({HKDF})},
+  institution = {Internet Engineering Task Force},
+  type        = {RFC},
+  number      = {5869},
+  year        = {2010},
+  month       = may,
+  doi         = {10.17487/RFC5869}
+}
+
+@techreport{nist80038d,
+  author      = {Dworkin, Morris},
+  title       = {Recommendation for Block Cipher Modes of Operation:
+                 {Galois/Counter Mode} ({GCM}) and {GMAC}},
+  institution = {National Institute of Standards and Technology},
+  type        = {NIST Special Publication},
+  number      = {800-38D},
+  year        = {2007},
+  doi         = {10.6028/NIST.SP.800-38D}
+}
+
+@inproceedings{bernstein2006curve25519,
+  author    = {Bernstein, Daniel J.},
+  title     = {{Curve25519}: New {Diffie-Hellman} Speed Records},
+  booktitle = {Public Key Cryptography -- PKC 2006},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {3958},
+  pages     = {207--228},
+  year      = {2006},
+  publisher = {Springer},
+  doi       = {10.1007/11745853_14}
+}
+
+@article{bernstein2012ed25519,
+  author  = {Bernstein, Daniel J. and Duif, Niels and Lange, Tanja and Schwabe, Peter
+             and Yang, Bo-Yin},
+  title   = {High-Speed High-Security Signatures},
+  journal = {Journal of Cryptographic Engineering},
+  volume  = {2},
+  number  = {2},
+  pages   = {77--89},
+  year    = {2012},
+  doi     = {10.1007/s13389-012-0027-1}
+}
+
+% ------------------------------------------------------------- model extraction via APIs
+@inproceedings{tramer2016stealing,
+  author    = {Tram{\`e}r, Florian and Zhang, Fan and Juels, Ari and Reiter, Michael K.
+               and Ristenpart, Thomas},
+  title     = {Stealing Machine Learning Models via Prediction {APIs}},
+  booktitle = {Proceedings of the 25th USENIX Security Symposium},
+  pages     = {601--618},
+  year      = {2016},
+  publisher = {USENIX Association},
+  url       = {https://www.usenix.org/conference/usenixsecurity16/technical-sessions/presentation/tramer}
+}
+
+@inproceedings{jagielski2020extraction,
+  author    = {Jagielski, Matthew and Carlini, Nicholas and Berthelot, David
+               and Kurakin, Alex and Papernot, Nicolas},
+  title     = {High Accuracy and High Fidelity Extraction of Neural Networks},
+  booktitle = {Proceedings of the 29th USENIX Security Symposium},
+  year      = {2020},
+  publisher = {USENIX Association},
+  url       = {https://www.usenix.org/conference/usenixsecurity20/presentation/jagielski}
+}
+
+@inproceedings{orekondy2019knockoff,
+  author    = {Orekondy, Tribhuvanesh and Schiele, Bernt and Fritz, Mario},
+  title     = {Knockoff Nets: Stealing Functionality of Black-Box Models},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern
+               Recognition (CVPR)},
+  pages     = {4949--4958},
+  year      = {2019},
+  publisher = {IEEE},
+  doi       = {10.1109/CVPR.2019.00509}
+}
+
+@inproceedings{juuti2019prada,
+  author    = {Juuti, Mika and Szyller, Sebastian and Marchal, Samuel and Asokan, N.},
+  title     = {{PRADA}: Protecting Against {DNN} Model Stealing Attacks},
+  booktitle = {Proceedings of the 2019 IEEE European Symposium on Security and Privacy
+               (EuroS\&P)},
+  pages     = {512--527},
+  year      = {2019},
+  publisher = {IEEE},
+  doi       = {10.1109/EuroSP.2019.00044}
+}
+
+@inproceedings{adi2018watermarking,
+  author    = {Adi, Yossi and Baum, Carsten and Cisse, Moustapha and Pinkas, Benny
+               and Keshet, Joseph},
+  title     = {Turning Your Weakness Into a Strength: Watermarking Deep Neural Networks by
+               Backdooring},
+  booktitle = {Proceedings of the 27th USENIX Security Symposium},
+  year      = {2018},
+  publisher = {USENIX Association},
+  url       = {https://www.usenix.org/conference/usenixsecurity18/presentation/adi}
+}
+
+% ------------------------------------------------------------ serving systems and batching
+@inproceedings{crankshaw2017clipper,
+  author    = {Crankshaw, Daniel and Wang, Xin and Zhou, Giulio and Franklin, Michael J.
+               and Gonzalez, Joseph E. and Stoica, Ion},
+  title     = {Clipper: A Low-Latency Online Prediction Serving System},
+  booktitle = {Proceedings of the 14th USENIX Symposium on Networked Systems Design and
+               Implementation (NSDI)},
+  year      = {2017},
+  publisher = {USENIX Association},
+  url       = {https://www.usenix.org/conference/nsdi17/technical-sessions/presentation/crankshaw}
+}
+
+@inproceedings{yu2022orca,
+  author    = {Yu, Gyeong-In and Jeong, Joo Seong and Kim, Geon-Woo and Kim, Soojeong
+               and Chun, Byung-Gon},
+  title     = {Orca: A Distributed Serving System for {Transformer}-Based Generative Models},
+  booktitle = {Proceedings of the 16th USENIX Symposium on Operating Systems Design and
+               Implementation (OSDI)},
+  pages     = {521--538},
+  year      = {2022},
+  publisher = {USENIX Association},
+  url       = {https://www.usenix.org/conference/osdi22/presentation/yu}
+}
+
+@inproceedings{kwon2023vllm,
+  author    = {Kwon, Woosuk and Li, Zhuohan and Zhuang, Siyuan and Sheng, Ying
+               and Zheng, Lianmin and Yu, Cody Hao and Gonzalez, Joseph E.
+               and Zhang, Hao and Stoica, Ion},
+  title     = {Efficient Memory Management for Large Language Model Serving with
+               {PagedAttention}},
+  booktitle = {Proceedings of the 29th ACM Symposium on Operating Systems Principles (SOSP)},
+  pages     = {611--626},
+  year      = {2023},
+  publisher = {ACM},
+  doi       = {10.1145/3600006.3613165}
+}
+
+@inproceedings{cortez2017resourcecentral,
+  author    = {Cortez, Eli and Bonde, Anand and Muzio, Alexandre and Russinovich, Mark
+               and Fontoura, Marcus and Bianchini, Ricardo},
+  title     = {Resource Central: Understanding and Predicting Workloads for Improved
+               Resource Management in Large Cloud Platforms},
+  booktitle = {Proceedings of the 26th ACM Symposium on Operating Systems Principles (SOSP)},
+  pages     = {153--167},
+  year      = {2017},
+  publisher = {ACM},
+  doi       = {10.1145/3132747.3132772}
+}
+
+@article{padmanabhan1996prefetching,
+  author  = {Padmanabhan, Venkata N. and Mogul, Jeffrey C.},
+  title   = {Using Predictive Prefetching to Improve {World Wide Web} Latency},
+  journal = {ACM SIGCOMM Computer Communication Review},
+  volume  = {26},
+  number  = {3},
+  pages   = {22--36},
+  year    = {1996},
+  doi     = {10.1145/235160.235164}
+}
+
+@article{dean2013tail,
+  author  = {Dean, Jeffrey and Barroso, Luiz Andr{\'e}},
+  title   = {The Tail at Scale},
+  journal = {Communications of the ACM},
+  volume  = {56},
+  number  = {2},
+  pages   = {74--80},
+  year    = {2013},
+  doi     = {10.1145/2408776.2408794}
+}
+
+% ------------------------------------------------------------------------------ software
+@article{pedregosa2011sklearn,
+  author  = {Pedregosa, Fabian and Varoquaux, Ga{\"e}l and Gramfort, Alexandre
+             and Michel, Vincent and Thirion, Bertrand and Grisel, Olivier
+             and Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron
+             and Dubourg, Vincent and Vanderplas, Jake and Passos, Alexandre
+             and Cournapeau, David and Brucher, Matthieu and Perrot, Matthieu
+             and Duchesnay, {\'E}douard},
+  title   = {Scikit-learn: Machine Learning in {Python}},
+  journal = {Journal of Machine Learning Research},
+  volume  = {12},
+  pages   = {2825--2830},
+  year    = {2011},
+  url     = {https://jmlr.org/papers/v12/pedregosa11a.html}
+}
+
+@article{harris2020numpy,
+  author  = {Harris, Charles R. and Millman, K. Jarrod and van der Walt, St{\'e}fan J.
+             and Gommers, Ralf and Virtanen, Pauli and Cournapeau, David and Wieser, Eric
+             and Taylor, Julian and others},
+  title   = {Array Programming with {NumPy}},
+  journal = {Nature},
+  volume  = {585},
+  number  = {7825},
+  pages   = {357--362},
+  year    = {2020},
+  doi     = {10.1038/s41586-020-2649-2}
+}
+
+@software{simpy,
+  author  = {{Team SimPy}},
+  title   = {{SimPy}: Discrete Event Simulation for {Python}},
+  version = {4.1.2},
+  url     = {https://simpy.readthedocs.io/},
+  urldate = {2026-10-16}
+}
+
+@software{pyca_cryptography,
+  author  = {{Python Cryptographic Authority}},
+  title   = {pyca/cryptography},
+  version = {50.0.2},
+  url     = {https://cryptography.io/},
+  urldate = {2026-10-16}
+}
+
+@software{fastapi,
+  author  = {Ram{\'i}rez, Sebasti{\'a}n},
+  title   = {{FastAPI}},
+  version = {0.143.2},
+  url     = {https://fastapi.tiangolo.com/},
+  urldate = {2026-10-16}
+}

@@ -1,0 +1,17 @@
+% Figure 2: feature tier state machine with the Section 6.3 thresholds.
+\begin{tikzpicture}[
+    font=\sffamily\footnotesize,
+    st/.style={draw=boxgray, rounded corners=3pt, fill=white, align=left, inner sep=6pt,
+               text width=2.9cm, minimum height=12mm},
+    arr/.style={-{Stealth[length=5pt]}, draw=boxgray, line width=0.6pt},
+    lbl/.style={font=\sffamily\scriptsize, text=textgray, align=center}]
+  \node[st] (c) {\textbf{cloud\_only}\\\textcolor{textgray}{Code and weights server-only}};
+  \node[st, right=27mm of c] (h) {\textbf{hybrid}\\\textcolor{textgray}{Server-led; client fallback}};
+  \node[st, right=27mm of h] (k) {\textbf{client\_ok}\\\textcolor{textgray}{Shipped, obfuscated client}};
+
+  \draw[arr] (c) -- node[lbl, above=1pt, text width=2.5cm] {\(V < 0.65\) and \(S > 0.6\)} (h);
+  \draw[arr, draw=promote, line width=1.1pt] (h) -- node[lbl, above=1pt, text width=2.6cm]
+      {\(V < 0.40\), on device\\\textcolor{black}{\textbf{human approval}}} (k);
+  \draw[arr] (h.south) -- ++(0,-6mm) -| node[lbl, below, pos=0.25] {\(V \ge 0.65\): demote automatically} ($(c.south)+(0.6,0)$);
+  \draw[arr] (k.south) -- ++(0,-13mm) -| node[lbl, below, pos=0.25] {\(V \ge 0.65\): next versions return to cloud; shipped code stays public} ($(c.south)+(-0.6,0)$);
+\end{tikzpicture}
