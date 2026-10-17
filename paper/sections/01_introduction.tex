@@ -16,33 +16,41 @@ injects JavaScript hooks into running processes to trace, patch and dump memory
 names and types: DIRE and DIRTY predict identifier names and types from decompiler output
 \cite{lacomis2019dire,chen2022dirty}, and LLM4Decompile trains language models to decompile
 x86 binaries end to end \cite{tan2024llm4decompile}. An automated reverse-engineering agent
-(the original SA-HEACS blueprint calls such a toolkit an \enquote{REA}) can therefore chain
+(the original blueprint for this design calls such a toolkit an \enquote{REA}) can therefore chain
 dumping, decompilation and semantic recovery with little human effort. The scarce resource
 for the attacker is no longer analyst time; it is access to the code.
 
-SA-HEACS removes that access for the code that matters. It splits an application into a
-thin client shell, which handles input, local rendering and commodity features, and a set
-of server-side services that hold the high-value IP. The idea of hiding a program slice on
-a trusted server is old \cite{zhang2003hiding}, as is offloading work from a constrained
-client \cite{cuervo2010maui,chun2011clonecloud,kang2017neurosurgeon}. What is new here is the
-combination of three things: an explicit IP-centric partitioning rule; a learned
-orchestrator that makes the economics of remote execution workable through locality
-routing, micro-batching and prefetch; and a lifecycle policy that moves features between
-tiers as their value decays.
+Removing that access is an established defence. Client/server code splitting moves selected
+code to a trusted server so that the shipped client is incomplete; it goes back at least to
+DISSECT \cite{valdez2001dissect}, was applied to program slices \cite{zhang2003hiding},
+combined with remote attestation \cite{viticchie2016reactive}, and has been measured against
+human attackers \cite{viticchie_ese_splitting}. Offloading work from a constrained client is
+likewise well studied, with performance rather than secrecy as the goal
+\cite{cuervo2010maui,chun2011clonecloud,kang2017neurosurgeon}.
 
-This paper makes five contributions:
+This paper revisits client/server code splitting for AI-assisted reverse engineering. We
+keep an application's high-value logic on servers the vendor controls and leave the client
+a thin shell that handles input, local rendering and commodity features and reaches that
+logic through attested calls. We call this design Server-Assisted Hybrid Execution and
+AI-Optimized Cloud Shielding (SA-HEACS). The split and its attested call path follow prior
+work (\cref{sec:related}); what we add is the machinery to run the split economically and
+to change it as a product ages.
+
+This paper makes two contributions:
 \begin{enumerate}
-  \item An architecture that separates a zero-IP client shell from attested, segmented
-        server clusters, with a request protocol (\cref{sec:arch}).
-  \item A threat model that states which reverse-engineering attacks the design removes and
-        which it does not (\cref{sec:threat,sec:security}).
-  \item An orchestrator design with pseudocode and runnable Python for locality routing,
-        micro-batching and Markov prefetch (\cref{sec:orch}).
+  \item A learned orchestrator that decides execution locality under a hard security
+        constraint and uses micro-batching and Markov prefetch to offset the cost and
+        latency of remote execution, with pseudocode and runnable Python
+        (\cref{sec:orch}).
   \item A Dynamic Feature Promotion/Demotion Pipeline that scores each feature's IP value
-        and clone risk and moves it between cloud-only and client-local execution
-        (\cref{sec:lifecycle}).
-  \item An evaluation methodology and a reproducible simulation of cost and latency
-        trade-offs, with the limits of what simulation can show (\cref{sec:eval}).
+        and clone risk and moves it between cloud-only, hybrid and client-local tiers over
+        the product's lifecycle (\cref{sec:lifecycle}).
 \end{enumerate}
+To support them, we describe the split architecture and its attested request protocol,
+which follow established code-splitting and attestation designs (\cref{sec:arch}); give a
+threat model for AI-assisted reverse-engineering pipelines that states which attacks the
+split removes and which it does not (\cref{sec:threat,sec:security}); and provide an
+evaluation methodology and a reproducible simulation of cost and latency trade-offs, with
+the limits of what simulation can show (\cref{sec:eval}).
 All code is listed in \cref{app:code} and runs as shipped; every program output quoted in
 the text is read from the output of that code.

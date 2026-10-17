@@ -1,8 +1,9 @@
 \section{Background and related work}\label{sec:related}
 
-Prior work establishes that client-side protection only delays analysis, that server-side
-execution has been used for performance more than for secrecy, and that a remote API leaks
-its function through its outputs. SA-HEACS sits where those three lines meet.
+Prior work establishes that client-side protection only delays analysis, that moving
+sensitive code to a trusted server is an established and empirically evaluated defence, and
+that a remote API leaks its function through its outputs. SA-HEACS builds on those lines;
+\cref{sec:positioning} states what it adds.
 
 \subsection{Obfuscation and its limits}
 Collberg, Thomborson and Low catalogued obfuscating transformations by potency, resilience
@@ -30,10 +31,33 @@ end-to-end decompilation of compiled binaries by fine-tuned language models
 \cite{tan2024llm4decompile}. These tools lower the human effort per target, which weakens
 defences whose value rested on analyst time.
 
-\subsection{Program splitting and computation offloading}
-Zhang and Gupta proposed hiding critical program slices on a trusted server so that the
-client binary is incomplete \cite{zhang2003hiding}; SA-HEACS generalises this from slices
-to whole features with a managed lifecycle. Offloading systems such as MAUI
+% TODO: check these one-line characterisations against the BAR paper and the blog post.
+Recent work targets LLM-based agents directly. A BAR 2026 study examines where agents fail
+on capture-the-flag reverse-engineering tasks, as a basis for LLM-resistant software
+protection \cite{bar2026llmresistant}, and a 2026 practitioner report explores how far
+AI-assisted reverse engineering can be hindered \cite{quarkslab2026defeating}. Both address
+code that the attacker holds; SA-HEACS is complementary and removes the most valuable code
+from the attacker's machine.
+
+\subsection{Client/server code splitting}
+Client/server code splitting moves part of a program to a trusted server so that the
+client cannot run, or be fully analysed, without it. DISSECT introduced the technique,
+distributing selected parts of an application to a server for security
+\cite{valdez2001dissect}. Zhang and Gupta later hid critical program slices on a trusted
+server so that the client binary is incomplete \cite{zhang2003hiding}, and the bianlian
+work studied how to balance execution between client and server in remote
+tamper-resistance, with the server continuously replacing client code
+\cite{bianlian2008}.
+
+Code splitting has also been evaluated empirically. Viticchie et al.\ measured the effort
+needed to attack programs protected with client/server code splitting and found that
+attack success fell from 89\% on clear code to 52\% with the strongest protection
+\cite{viticchie_ese_splitting}. Splitting raises attack cost substantially without
+stopping every attacker, which is consistent with the residual risks in
+\cref{sec:security}.
+
+\subsection{Computation offloading}
+Offloading systems such as MAUI
 \cite{cuervo2010maui}, CloneCloud \cite{chun2011clonecloud} and Neurosurgeon
 \cite{kang2017neurosurgeon} partition work between device and cloud to save energy or
 latency, and cloud gaming systems stream rendered output to thin clients
@@ -50,6 +74,14 @@ App Attest \cite{apple_appattest}, and trusted execution environments such as In
 hardware-rooted quotes \cite{costan2016sgx}. Attestation raises the cost of driving the API
 from a modified client, but it does not keep a legitimate client from observing its own
 inputs and outputs.
+
+% TODO: check this summary of reactive attestation against the SPRO '16 paper.
+Reactive attestation is the closest prior work to the attested call path of SA-HEACS.
+Viticchie et al.\ couple remote attestation with client/server code splitting, so that a
+server that detects tampering reacts by no longer serving the split code to that client
+\cite{viticchie2016reactive}. Our call path (\cref{sec:arch}) follows the same pattern of
+gating server-side execution on attestation, with a device key bound to platform
+attestation.
 
 \subsection{Model extraction through APIs}
 Keeping code on a server does not keep its function secret. Tramèr et al.\ extracted models
@@ -69,3 +101,16 @@ virtual-machine behaviour to inform allocation \cite{cortez2017resourcecentral},
 predictive prefetching has long been used to hide web latency
 \cite{padmanabhan1996prefetching}. Dean and Barroso describe why tail latency, not the mean,
 governs user experience at scale \cite{dean2013tail}.
+
+\subsection{How this paper differs}\label{sec:positioning}
+SA-HEACS does not claim the client/server split, server-side execution of protected code,
+or attested remote calls as new; all three follow the work above. Its contributions are
+narrower. First, a learned orchestrator decides per request where \tier{hybrid} and
+\tier{client\_ok} work runs, never moves \tier{cloud\_only} work to the client, and uses
+micro-batching and prefetch to offset the cost and latency that remote execution adds
+(\cref{sec:orch}). Second, the Dynamic Feature Promotion/Demotion Pipeline treats the split
+as something that changes over a product's lifecycle, moving each feature between
+cloud-only, hybrid and client-local tiers as its IP value and clone risk change
+(\cref{sec:lifecycle}). We frame both for attackers who run AI-assisted pipelines combining
+Ghidra, Frida and LLMs, against which the time-based value of client-side protection
+shrinks while code that is not shipped stays out of reach.

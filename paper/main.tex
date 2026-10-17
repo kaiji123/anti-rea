@@ -108,28 +108,30 @@
 
 \begin{abstract}
 \noindent
-SA-HEACS keeps a product's most valuable logic on servers the vendor controls, so that
-client-side reverse engineering recovers an interface rather than the protected algorithm.
 Automated, AI-assisted reverse-engineering pipelines now chain decompilers such as Ghidra,
 dynamic instrumentation such as Frida, and large language models to recover program
 semantics far faster than a human analyst. Classical client-side defences (obfuscation,
 anti-debugging, tamper-proofing) raise the cost of analysis but cannot prevent recovery in
 general, a limit made precise by the impossibility of virtual black-box obfuscation.
+Client/server code splitting avoids that limit by not shipping the protected code.
 
-We present Server-Assisted Hybrid Execution and AI-Optimized Cloud Shielding
-(SA-HEACS), an architecture with three parts: a thin client shell that holds no
-high-value intellectual property (IP); attested remote procedure calls to segmented server
-clusters that execute that IP; and a learned orchestrator that decides execution locality,
-micro-batches requests, and prefetches likely work to offset the latency and cost of remote
-execution. A Dynamic Feature Promotion/Demotion Pipeline moves each feature between
-cloud-only and client-local execution as its IP value and clone risk change.
+This paper revisits client/server code splitting for AI-assisted reverse engineering. A
+thin client shell holds no high-value intellectual property (IP) and reaches the product's
+most valuable logic, kept on servers the vendor controls, through attested remote calls; we
+call this design Server-Assisted Hybrid Execution and AI-Optimized Cloud Shielding
+(SA-HEACS). The split and the attested call path follow prior work. We contribute two
+mechanisms that make the split workable over a product's life: a learned orchestrator that
+decides execution locality, micro-batches requests and prefetches likely work to offset the
+latency and cost of remote execution; and a Dynamic Feature Promotion/Demotion Pipeline
+that moves each feature between cloud-only, hybrid and client-local tiers as its IP value
+and clone risk change.
 
 We give a threat model, pseudocode and runnable Python for the attested call path, the
 orchestrator and the lifecycle policy, and a discrete-event simulation of cost and latency.
 In that simulation, a 5\,ms batching window cuts accelerator time per request about eightfold
 for 6\,ms of extra 95th-percentile latency, and prefetching the two most likely next
 operations hides the network round trip for 68\% of steps at the price of 132\% extra
-compute. SA-HEACS removes the protected code from the attacker's machine, which defeats
+compute. Keeping the code on the server removes it from the attacker's machine, which defeats
 static decompilation and memory dumping of that code. It does not stop black-box extraction
 of functionality through the API: query-based model extraction, output-based cloning and
 account abuse remain, and we treat them as residual risks with rate-limiting, watermarking
@@ -137,8 +139,9 @@ and anomaly-detection mitigations rather than claiming them solved.
 \end{abstract}
 
 \vspace{2pt}
-\noindent\textbf{Keywords:} software protection; reverse engineering; obfuscation; remote
-attestation; computation offloading; model extraction; ML serving.
+\noindent\textbf{Keywords:} software protection; reverse engineering; client/server code
+splitting; obfuscation; remote attestation; computation offloading; model extraction; ML
+serving.
 
 \input{sections/01_introduction}
 \input{sections/02_related}
